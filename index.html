@@ -1,0 +1,1955 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>내 업무 플래너</title>
+  <meta name="description" content="개인 업무를 등록하고 마감일과 우선순위, 완료 상태를 관리하는 브라우저 저장형 업무 플래너">
+  <meta property="og:title" content="내 업무 플래너">
+  <meta property="og:description" content="개인 업무를 등록하고 마감일과 우선순위, 완료 상태를 관리하는 브라우저 저장형 업무 플래너">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    /* CSS Reset & System Foundations */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      
+      --text-main: #0f172a;
+      --text-sub: #334155;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-section-accent: #f1f5f9;
+      
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --danger-text: #991b1b;
+      
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --warning-border: #fde68a;
+      --warning-text: #92400e;
+      
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --success-border: #a7f3d0;
+      --success-text: #065f46;
+
+      --info-bg: #eff6ff;
+      --info-border: #bfdbfe;
+      --info-text: #1e40af;
+      
+      --priority-high-bg: #fee2e2;
+      --priority-high-border: #fca5a5;
+      --priority-high-text: #991b1b;
+      
+      --priority-med-bg: #e0e7ff;
+      --priority-med-border: #c7d2fe;
+      --priority-med-text: #3730a3;
+      
+      --priority-low-bg: #f1f5f9;
+      --priority-low-border: #cbd5e1;
+      --priority-low-text: #475569;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+      --shadow-hover: 0 8px 24px -4px rgba(15, 23, 42, 0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding: 1.5rem 1rem 3.5rem;
+      word-break: keep-all;
+    }
+
+    .app-container {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    /* Header Section */
+    header {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1.5rem;
+    }
+
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .app-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .app-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.025em;
+      line-height: 1.3;
+    }
+
+    .storage-banner {
+      font-size: 0.825rem;
+      color: var(--text-sub);
+      background-color: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .storage-banner svg {
+      flex-shrink: 0;
+      color: var(--primary);
+    }
+
+    .header-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Dashboard Status Counters */
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.15rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+
+    .stat-card:hover {
+      border-color: #94a3b8;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .stat-card.active {
+      border-color: var(--primary);
+      background-color: var(--primary-light);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .stat-label {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.15;
+    }
+
+    .stat-value.danger { color: var(--danger); }
+    .stat-value.warning { color: var(--warning); }
+    .stat-value.success { color: var(--success); }
+    .stat-value.primary { color: var(--primary); }
+
+    /* Notification Banner */
+    #notificationArea {
+      margin-bottom: 1.25rem;
+      display: none;
+    }
+
+    .notification {
+      padding: 0.875rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.925rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: fadeIn 0.2s ease-in-out;
+      box-shadow: var(--shadow-sm);
+      line-height: 1.5;
+    }
+
+    .notification.error {
+      background-color: var(--danger-bg);
+      color: var(--danger-text);
+      border: 1.5px solid var(--danger-border);
+    }
+
+    .notification.success {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border: 1.5px solid var(--success-border);
+    }
+
+    .notification.info {
+      background-color: var(--info-bg);
+      color: var(--info-text);
+      border: 1.5px solid var(--info-border);
+    }
+
+    /* Input Section Card (Distinct Separation) */
+    .form-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid #dbeafe;
+      border-top: 4px solid var(--primary);
+      padding: 1.75rem 2rem;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 2rem;
+    }
+
+    .section-header-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-tag {
+      font-size: 0.775rem;
+      font-weight: 600;
+      color: var(--primary);
+      background-color: var(--primary-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 20px;
+      border: 1px solid var(--primary-border);
+    }
+
+    .task-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .input-row-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .form-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .input-title {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: #ffffff;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.15s ease;
+      min-height: 48px;
+    }
+
+    .input-title:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+
+    .input-title.has-error {
+      border-color: var(--danger);
+      background-color: #fffaf0;
+    }
+
+    .field-error-msg {
+      font-size: 0.85rem;
+      color: var(--danger);
+      font-weight: 600;
+      display: none;
+      margin-top: 0.25rem;
+    }
+
+    .input-grid-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .select-custom, .input-date {
+      width: 100%;
+      padding: 0.75rem 0.875rem;
+      font-size: 0.95rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: #ffffff;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.15s ease;
+      min-height: 48px;
+    }
+
+    .select-custom:focus, .input-date:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 0.25rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.975rem;
+      font-weight: 700;
+      padding: 0.8rem 1.6rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: all 0.15s ease;
+      min-height: 48px;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      box-shadow: 0 5px 12px rgba(37, 99, 235, 0.38);
+    }
+
+    /* Google Calendar Global Guide Notice Banner */
+    .calendar-sync-notice {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .calendar-notice-head {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    .calendar-notice-head svg {
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .calendar-notice-list {
+      margin-left: 1.25rem;
+      padding-left: 0;
+    }
+
+    .calendar-notice-list li {
+      margin-bottom: 0.2rem;
+    }
+
+    /* Task List Section & Bar */
+    .task-list-section {
+      margin-top: 1.75rem;
+    }
+
+    .list-header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0 0.25rem;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 0.95rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .filter-btn:hover {
+      border-color: #94a3b8;
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .sort-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .sort-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .sort-select {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background-color: #ffffff;
+      color: var(--text-main);
+      outline: none;
+      min-height: 38px;
+      cursor: pointer;
+    }
+
+    /* Tasks List Container */
+    .task-list-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border-color);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* Task Item Row */
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      gap: 1.1rem;
+      background-color: #ffffff;
+      transition: background-color 0.15s ease;
+    }
+
+    .task-item:last-child {
+      border-bottom: none;
+    }
+
+    .task-item:hover {
+      background-color: #fbfcfe;
+    }
+
+    .task-item.is-completed {
+      background-color: #f8fafc;
+    }
+
+    .task-item.is-overdue {
+      border-left: 5px solid var(--danger);
+      background-color: #fffdfd;
+    }
+
+    .task-item.is-today {
+      border-left: 5px solid var(--warning);
+      background-color: #fffefb;
+    }
+
+    /* Checkbox - Prominent & Accessible */
+    .checkbox-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      margin-top: 1px;
+    }
+
+    .checkbox-input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .custom-checkbox {
+      width: 24px;
+      height: 24px;
+      background-color: #ffffff;
+      border: 2px solid #94a3b8;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.18s ease;
+    }
+
+    .checkbox-container:hover .custom-checkbox {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .checkbox-input:checked ~ .custom-checkbox {
+      background-color: var(--success);
+      border-color: var(--success);
+      box-shadow: 0 2px 5px rgba(5, 150, 105, 0.3);
+    }
+
+    .custom-checkbox svg {
+      display: none;
+      width: 15px;
+      height: 15px;
+      stroke: #ffffff;
+      stroke-width: 3.2;
+      fill: none;
+    }
+
+    .checkbox-input:checked ~ .custom-checkbox svg {
+      display: block;
+    }
+
+    /* Task Content */
+    .task-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .task-title-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.45;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      transition: color 0.15s ease;
+    }
+
+    /* Completed Strikethrough & Muted Text */
+    .task-item.is-completed .task-title-text {
+      text-decoration: line-through;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.825rem;
+      margin-top: 0.15rem;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.775rem;
+      font-weight: 700;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Priority Badges - Colors AND Explicit Korean Text */
+    .badge-priority-high {
+      background-color: var(--priority-high-bg);
+      color: var(--priority-high-text);
+      border: 1px solid var(--priority-high-border);
+    }
+    .badge-priority-high .badge-dot { background-color: var(--danger); }
+
+    .badge-priority-medium {
+      background-color: var(--priority-med-bg);
+      color: var(--priority-med-text);
+      border: 1px solid var(--priority-med-border);
+    }
+    .badge-priority-medium .badge-dot { background-color: #4f46e5; }
+
+    .badge-priority-low {
+      background-color: var(--priority-low-bg);
+      color: var(--priority-low-text);
+      border: 1px solid var(--priority-low-border);
+    }
+    .badge-priority-low .badge-dot { background-color: #64748b; }
+
+    /* Due Date & State Badges */
+    .badge-due-none {
+      color: var(--text-muted);
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
+    }
+
+    .badge-overdue {
+      background-color: var(--danger-bg);
+      color: var(--danger-text);
+      border: 1px solid var(--danger-border);
+      font-weight: 800;
+    }
+
+    .badge-today {
+      background-color: var(--warning-bg);
+      color: var(--warning-text);
+      border: 1px solid var(--warning-border);
+      font-weight: 800;
+    }
+
+    .badge-normal-due {
+      color: #334155;
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
+    }
+
+    .badge-completed {
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid var(--success-border);
+      font-weight: 700;
+    }
+
+    /* Task Actions */
+    .task-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .task-action-btns {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    /* Google Calendar Button Styling */
+    .btn-action-calendar {
+      background-color: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      color: #1e40af;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      min-height: 38px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn-action-calendar:hover:not(.is-disabled) {
+      background-color: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-action-calendar.is-disabled {
+      background-color: #f1f5f9;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.75;
+    }
+
+    .calendar-field-notice {
+      font-size: 0.725rem;
+      color: var(--text-muted);
+      text-align: right;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    /* Delete Button */
+    .btn-action-delete {
+      background-color: transparent;
+      border: 1.5px solid #e2e8f0;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--radius-sm);
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      min-height: 38px;
+      white-space: nowrap;
+    }
+
+    .btn-action-delete:hover {
+      background-color: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+
+    /* Empty State View */
+    .empty-state {
+      padding: 4rem 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      width: 4rem;
+      height: 4rem;
+      background-color: #eff6ff;
+      color: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 2rem;
+    }
+
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-desc {
+      font-size: 0.95rem;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    /* Delete Confirmation Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.25);
+      border: 1px solid var(--border-color);
+      animation: modalPop 0.18s ease-out;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 0.65rem;
+    }
+
+    .modal-desc {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.65rem;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    /* Footer Note */
+    footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Responsive Design Optimization for Mobile Devices (<= 640px) */
+    @media (max-width: 640px) {
+      body {
+        padding: 0.75rem 0.65rem 2.5rem;
+      }
+
+      header {
+        padding: 1.25rem 1.15rem;
+        margin-bottom: 1.15rem;
+      }
+
+      h1 {
+        font-size: 1.35rem;
+      }
+
+      .storage-banner {
+        width: 100%;
+        font-size: 0.775rem;
+      }
+
+      .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .stat-card {
+        padding: 0.75rem 0.85rem;
+      }
+
+      .stat-value {
+        font-size: 1.4rem;
+      }
+
+      .form-card {
+        padding: 1.25rem 1.15rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .input-grid-options {
+        grid-template-columns: 1fr;
+        gap: 0.875rem;
+      }
+
+      .btn-primary {
+        width: 100%;
+      }
+
+      /* Task item row mobile layout */
+      .task-item {
+        padding: 1rem 0.875rem;
+        gap: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .task-item-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+      }
+
+      .checkbox-container {
+        width: 28px;
+        height: 28px;
+      }
+
+      .task-body {
+        width: 100%;
+        gap: 0.45rem;
+      }
+
+      .task-title-text {
+        font-size: 1rem;
+      }
+
+      .task-meta {
+        width: 100%;
+        gap: 0.4rem;
+        margin-top: 0.25rem;
+      }
+
+      .badge {
+        font-size: 0.725rem;
+        padding: 0.25rem 0.5rem;
+        white-space: normal;
+        word-break: keep-all;
+      }
+
+      .task-actions {
+        width: 100%;
+        align-items: stretch;
+        margin-top: 0.5rem;
+        padding-top: 0.65rem;
+        border-top: 1px dashed var(--border-color);
+      }
+
+      .task-action-btns {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+        width: 100%;
+      }
+
+      .btn-action-calendar {
+        justify-content: center;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.8rem;
+      }
+
+      .calendar-field-notice {
+        text-align: left;
+        margin-top: 0.2rem;
+      }
+
+      .list-header-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .filter-group {
+        overflow-x: auto;
+        padding-bottom: 4px;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .filter-btn {
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.75rem;
+        min-height: 34px;
+      }
+
+      .sort-control {
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .sort-select {
+        flex: 1;
+        max-width: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="header-top">
+        <div class="app-title-group">
+          <div class="app-icon" aria-hidden="true">✓</div>
+          <h1>내 업무 플래너</h1>
+        </div>
+        <div class="storage-banner">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>이 브라우저에 저장되며 다른 기기와 자동 동기화되지 않습니다</span>
+        </div>
+      </div>
+      <p class="header-desc">개인 업무를 등록하고 마감일과 우선순위, 완료 상태를 한눈에 체계적으로 관리하세요.</p>
+    </header>
+
+    <!-- Notification / Alert Bar -->
+    <div id="notificationArea" role="alert">
+      <div id="notificationMsg" class="notification"></div>
+    </div>
+
+    <!-- Status Overview Dashboard -->
+    <div class="dashboard-stats" aria-label="업무 상태 통계">
+      <div class="stat-card" data-filter="all" onclick="setFilter('all')">
+        <span class="stat-label">전체 업무</span>
+        <span class="stat-value primary" id="statAll">0</span>
+      </div>
+      <div class="stat-card" data-filter="pending" onclick="setFilter('pending')">
+        <span class="stat-label">진행 중</span>
+        <span class="stat-value" id="statPending">0</span>
+      </div>
+      <div class="stat-card" data-filter="today" onclick="setFilter('today')">
+        <span class="stat-label">오늘 마감</span>
+        <span class="stat-value warning" id="statToday">0</span>
+      </div>
+      <div class="stat-card" data-filter="overdue" onclick="setFilter('overdue')">
+        <span class="stat-label">기한 지남</span>
+        <span class="stat-value danger" id="statOverdue">0</span>
+      </div>
+    </div>
+
+    <!-- Task Registration Form (Clear Input Boundary) -->
+    <section class="form-card" aria-labelledby="formSectionHeading">
+      <div class="section-header-box">
+        <h2 id="formSectionHeading" class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          새 업무 등록
+        </h2>
+        <span class="section-tag">작성 영역</span>
+      </div>
+
+      <form id="taskForm" class="task-form" onsubmit="handleAddTask(event)" novalidate>
+        <div class="input-row-main">
+          <label for="taskTitle" class="form-label">
+            업무명 <span style="color: var(--danger)">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="taskTitle" 
+            class="input-title" 
+            placeholder="수행할 업무 내용을 구체적으로 입력하세요 (예: 3분기 실적 보고서 작성)" 
+            autocomplete="off"
+          />
+          <div id="titleError" class="field-error-msg"></div>
+        </div>
+
+        <div class="input-grid-options">
+          <div class="form-group">
+            <label for="taskPriority" class="form-label">우선순위 선택</label>
+            <select id="taskPriority" class="select-custom">
+              <option value="high">높음 (긴급한 업무)</option>
+              <option value="medium" selected>보통 (일반 업무)</option>
+              <option value="low">낮음 (여유 업무)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="taskDueDate" class="form-label">마감일 (선택사항)</label>
+            <input type="date" id="taskDueDate" class="input-date" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="btnSubmitTask">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            업무 추가하기
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Task List Section (Clear Separation) -->
+    <section class="task-list-section" aria-label="업무 목록 관리">
+      <!-- Google Calendar Sync Notice Guide -->
+      <div class="calendar-sync-notice" role="region" aria-label="Google 캘린더 연동 안내">
+        <div class="calendar-notice-head">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>Google 캘린더 연동 안내</span>
+        </div>
+        <ul class="calendar-notice-list">
+          <li>마감일이 있는 업무의 <strong>[Google 캘린더에 추가]</strong> 버튼을 누르면 제목과 우선순위가 전달되어 새 탭이 열립니다.</li>
+          <li><strong>Google 캘린더에서 확인 후 저장하세요.</strong> 이후 플래너에서의 변경은 자동 동기화되지 않습니다.</li>
+          <li>링크를 열었다고 해서 ‘등록 완료’가 아니며, 중복 저장 여부는 자동으로 판단할 수 없으므로 캘린더 내 일정을 직접 확인해 주세요.</li>
+        </ul>
+      </div>
+
+      <!-- List Controls: Filters & Sort -->
+      <div class="list-header-bar">
+        <div class="filter-group" role="tablist" aria-label="업무 목록 필터">
+          <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter('all')">전체</button>
+          <button type="button" class="filter-btn" data-filter="pending" onclick="setFilter('pending')">진행 중</button>
+          <button type="button" class="filter-btn" data-filter="completed" onclick="setFilter('completed')">완료됨</button>
+          <button type="button" class="filter-btn" data-filter="today" onclick="setFilter('today')">오늘 마감</button>
+          <button type="button" class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">기한 지남</button>
+        </div>
+
+        <div class="sort-control">
+          <label for="sortOrder" class="sort-label">정렬:</label>
+          <select id="sortOrder" class="sort-select" onchange="handleSortChange(this.value)">
+            <option value="created-desc">최신 등록순</option>
+            <option value="created-asc">오래된 등록순</option>
+            <option value="due-asc">마감일 빠른순</option>
+            <option value="due-desc">마감일 늦은순</option>
+            <option value="priority-desc">우선순위 높은순</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Task List Container Card -->
+      <main class="task-list-card">
+        <ul id="taskList" class="task-list" aria-label="등록된 업무 목록">
+          <!-- Rendered dynamically -->
+        </ul>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <div class="empty-icon" aria-hidden="true">📝</div>
+          <h3 class="empty-title" id="emptyTitle">등록된 업무가 없습니다</h3>
+          <p class="empty-desc" id="emptyDesc">새로운 업무를 상단 입력창에 등록하여 일정을 체계적으로 관리해 보세요.</p>
+        </div>
+      </main>
+    </section>
+
+    <!-- Footer Note -->
+    <footer>
+      <p>내 업무 플래너 &copy; 로컬 브라우저 저장소 기반으로 안전하게 유지됩니다.</p>
+      <p style="margin-top: 0.35rem; font-size: 0.775rem;">데이터는 사용 중인 브라우저의 localStorage에만 기록되며 서버나 타 기기와 연동되지 않습니다.</p>
+    </footer>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <h3 id="modalTitle" class="modal-title">업무 삭제</h3>
+      <p id="modalDesc" class="modal-desc">이 업무를 목록에서 완전히 삭제하시겠습니까?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">취소</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDelete">삭제하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 내 업무 플래너 (Vanilla JavaScript)
+     * - Single-file architecture
+     * - LocalStorage persistence with unique IDs
+     * - Google Calendar template link integration (All-day event, safe month/year rollover)
+     * - Local date comparison for today & overdue
+     * - Immediate save and comprehensive error handling
+     */
+
+    // Storage Key - 기존 저장소 키 유지 (저장된 업무 보존)
+    const STORAGE_KEY = 'my_work_planner_tasks_v1';
+
+    // State
+    let tasks = [];
+    let currentFilter = 'all';
+    let currentSort = 'created-desc';
+    let deletingTaskId = null;
+    let notificationTimer = null;
+
+    // DOM Elements
+    const taskForm = document.getElementById('taskForm');
+    const taskTitleInput = document.getElementById('taskTitle');
+    const taskPrioritySelect = document.getElementById('taskPriority');
+    const taskDueDateInput = document.getElementById('taskDueDate');
+    const titleError = document.getElementById('titleError');
+    const taskList = document.getElementById('taskList');
+    const emptyState = document.getElementById('emptyState');
+    const emptyTitle = document.getElementById('emptyTitle');
+    const emptyDesc = document.getElementById('emptyDesc');
+    const notificationArea = document.getElementById('notificationArea');
+    const notificationMsg = document.getElementById('notificationMsg');
+    const deleteModal = document.getElementById('deleteModal');
+    const modalDesc = document.getElementById('modalDesc');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+
+    // Stats Elements
+    const statAll = document.getElementById('statAll');
+    const statPending = document.getElementById('statPending');
+    const statToday = document.getElementById('statToday');
+    const statOverdue = document.getElementById('statOverdue');
+
+    /**
+     * Get user's local date string formatted as YYYY-MM-DD
+     */
+    function getLocalDateString() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    /**
+     * Format date for user display: YYYY년 M월 D일 (요일)
+     */
+    function formatDisplayDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const dateObj = new Date(year, month - 1, day);
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayName = dayNames[dateObj.getDay()];
+        return `${year}년 ${month}월 ${day}일 (${dayName})`;
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    /**
+     * Calculate D-day difference relative to local today
+     */
+    function getDDayString(dueDateStr, isCompleted) {
+      if (!dueDateStr) return null;
+      const todayStr = getLocalDateString();
+      if (dueDateStr === todayStr) {
+        return '오늘 마감';
+      }
+      
+      const tDate = new Date(todayStr + 'T00:00:00');
+      const dDate = new Date(dueDateStr + 'T00:00:00');
+      const diffTime = dDate - tDate;
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return isCompleted ? null : `${Math.abs(diffDays)}일 지남`;
+      } else {
+        return `D-${diffDays}`;
+      }
+    }
+
+    /**
+     * Build Google Calendar pre-filled URL for all-day event
+     * - Dates format: YYYYMMDD/YYYYMMDD
+     * - End date is the day AFTER due date (exclusive end date)
+     * - Safely calculates month-end and year-end rollovers using JS Date
+     * - Uses URLSearchParams for robust query encoding
+     */
+    function buildGoogleCalendarUrl(task) {
+      if (!task.dueDate) return null;
+
+      try {
+        const parts = task.dueDate.split('-');
+        if (parts.length !== 3) return null;
+
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1; // 0-indexed month
+        const d = parseInt(parts[2], 10);
+
+        // Start Date
+        const startDate = new Date(y, m, d);
+        // Next day (exclusive end date for all-day event in Google Calendar)
+        const endDate = new Date(y, m, d + 1);
+
+        const pad = (num) => String(num).padStart(2, '0');
+        const startStr = `${startDate.getFullYear()}${pad(startDate.getMonth() + 1)}${pad(startDate.getDate())}`;
+        const endStr = `${endDate.getFullYear()}${pad(endDate.getMonth() + 1)}${pad(endDate.getDate())}`;
+
+        const priorityTextMap = {
+          high: '높음 (긴급)',
+          medium: '보통 (일반)',
+          low: '낮음 (여유)'
+        };
+        const priorityLabel = priorityTextMap[task.priority] || '보통';
+
+        const detailsText = 
+          `[업무 플래너에서 추가한 일정]\n` +
+          `• 우선순위: ${priorityLabel}\n` +
+          `• 마감일: ${task.dueDate}\n\n` +
+          `※ Google 캘린더에서 내용을 확인 후 [저장]을 눌러 등록하세요.\n` +
+          `※ 이후 업무 플래너에서의 변경 사항은 자동 동기화되지 않습니다.`;
+
+        const params = new URLSearchParams();
+        params.set('action', 'TEMPLATE');
+        params.set('text', task.title);
+        params.set('dates', `${startStr}/${endStr}`);
+        params.set('details', detailsText);
+
+        return `https://calendar.google.com/calendar/r/eventedit?${params.toString()}`;
+      } catch (err) {
+        console.error('Failed to construct Google Calendar URL:', err);
+        return null;
+      }
+    }
+
+    /**
+     * Handlers for Calendar button interactions
+     */
+    function handleCalendarNoDueDate() {
+      showNotification('마감일을 먼저 설정해 주세요. Google 캘린더 일정 등록에는 마감일이 필요합니다.', 'error');
+    }
+
+    function handleCalendarLinkClick(taskTitle) {
+      showNotification(
+        `"${taskTitle}" 일정이 Google 캘린더 새 탭에서 열렸습니다. 캘린더 화면에서 [저장]을 눌러야 등록되며, 이후 변경은 자동 동기화되지 않습니다. (중복 저장 여부는 자동으로 판단되지 않습니다.)`,
+        'info'
+      );
+    }
+
+    /**
+     * Show notification/toast banner with auto dismiss
+     */
+    function showNotification(message, type = 'error') {
+      if (notificationTimer) {
+        clearTimeout(notificationTimer);
+      }
+      notificationMsg.className = `notification ${type}`;
+      notificationMsg.textContent = message;
+      notificationArea.style.display = 'block';
+
+      // Keep info toasts slightly longer for detailed guidance
+      const duration = (type === 'info') ? 6500 : 4500;
+      notificationTimer = setTimeout(() => {
+        notificationArea.style.display = 'none';
+      }, duration);
+    }
+
+    /**
+     * Safe LocalStorage operations with error detection
+     */
+    function saveTasksToStorage() {
+      try {
+        const serialized = JSON.stringify(tasks);
+        localStorage.setItem(STORAGE_KEY, serialized);
+        return true;
+      } catch (err) {
+        console.error('Storage error:', err);
+        showNotification('저장되지 않았습니다. 브라우저 저장 공간이 가득 찼거나 접근 권한이 제한되어 있습니다.', 'error');
+        return false;
+      }
+    }
+
+    function loadTasksFromStorage() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            tasks = parsed;
+          } else {
+            tasks = [];
+          }
+        } else {
+          tasks = [];
+        }
+      } catch (err) {
+        console.error('Failed to parse saved tasks:', err);
+        tasks = [];
+        showNotification('이전 업무 데이터를 불러오는 도중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    /**
+     * Add Task Handler
+     */
+    function handleAddTask(e) {
+      e.preventDefault();
+      const rawTitle = taskTitleInput.value;
+      const trimmedTitle = rawTitle.trim();
+
+      // Rule: Prevent title with only whitespace and provide explanation
+      if (trimmedTitle.length === 0) {
+        taskTitleInput.classList.add('has-error');
+        titleError.textContent = '업무명을 입력해 주세요. 공백만으로는 업무를 등록할 수 없습니다.';
+        titleError.style.display = 'block';
+        taskTitleInput.focus();
+        return;
+      }
+
+      // Clear validation error
+      clearTitleError();
+
+      const priority = taskPrioritySelect.value || 'medium';
+      const dueDate = taskDueDateInput.value || null;
+
+      // Unique ID per task
+      const newTask = {
+        id: 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+        title: trimmedTitle,
+        priority: priority, // 'high' | 'medium' | 'low'
+        dueDate: dueDate,   // 'YYYY-MM-DD' or null
+        completed: false,
+        createdAt: new Date().toISOString()
+      };
+
+      // Add to beginning
+      tasks.unshift(newTask);
+
+      // Immediate save
+      const saved = saveTasksToStorage();
+
+      if (saved) {
+        // Reset form to defaults
+        taskTitleInput.value = '';
+        taskPrioritySelect.value = 'medium';
+        taskDueDateInput.value = '';
+        taskTitleInput.focus();
+        showNotification('새 업무가 성공적으로 등록되었습니다.', 'success');
+      }
+
+      render();
+    }
+
+    function clearTitleError() {
+      taskTitleInput.classList.remove('has-error');
+      titleError.textContent = '';
+      titleError.style.display = 'none';
+    }
+
+    taskTitleInput.addEventListener('input', () => {
+      if (taskTitleInput.value.trim().length > 0) {
+        clearTitleError();
+      }
+    });
+
+    /**
+     * Toggle Task Completion Status
+     */
+    function toggleTaskStatus(id) {
+      const taskIndex = tasks.findIndex(t => t.id === id);
+      if (taskIndex !== -1) {
+        tasks[taskIndex].completed = !tasks[taskIndex].completed;
+        saveTasksToStorage();
+        render();
+      }
+    }
+
+    /**
+     * Delete Task Flow
+     */
+    function openDeleteModal(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      deletingTaskId = id;
+      modalDesc.textContent = `"${task.title}" 업무를 삭제하시겠습니까? 삭제된 업무는 복구되지 않습니다.`;
+      deleteModal.style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      deletingTaskId = null;
+      deleteModal.style.display = 'none';
+    }
+
+    btnConfirmDelete.addEventListener('click', () => {
+      if (!deletingTaskId) return;
+      // Delete only the selected item
+      tasks = tasks.filter(t => t.id !== deletingTaskId);
+      saveTasksToStorage();
+      closeDeleteModal();
+      showNotification('업무가 삭제되었습니다.', 'success');
+      render();
+    });
+
+    // Close modal on backdrop click
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+
+    /**
+     * Filter & Sort Handlers
+     */
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // Update filter tabs UI
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-filter') === filter) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Update stat cards highlight
+      document.querySelectorAll('.stat-card').forEach(card => {
+        if (card.getAttribute('data-filter') === filter) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      render();
+    }
+
+    function handleSortChange(sort) {
+      currentSort = sort;
+      render();
+    }
+
+    /**
+     * Date Classification Helper
+     */
+    function getTaskStatusInfo(task) {
+      const todayStr = getLocalDateString();
+      const hasDueDate = Boolean(task.dueDate);
+
+      if (task.completed) {
+        return {
+          isOverdue: false,
+          isToday: false,
+          label: '완료'
+        };
+      }
+
+      if (!hasDueDate) {
+        return {
+          isOverdue: false,
+          isToday: false,
+          label: '마감일 없음'
+        };
+      }
+
+      // Rule: Compare against user's local date
+      // Rule: Today is NOT overdue
+      // Rule: Overdue ONLY if uncompleted and dueDate < today
+      if (task.dueDate < todayStr) {
+        return {
+          isOverdue: true,
+          isToday: false,
+          label: '기한 지남'
+        };
+      } else if (task.dueDate === todayStr) {
+        return {
+          isOverdue: false,
+          isToday: true,
+          label: '오늘 마감'
+        };
+      } else {
+        return {
+          isOverdue: false,
+          isToday: false,
+          label: '진행 중'
+        };
+      }
+    }
+
+    /**
+     * Priority Helpers - 색상과 함께 '높음 / 보통 / 낮음' 글자를 명확히 표시
+     */
+    function getPriorityBadge(priority) {
+      switch (priority) {
+        case 'high':
+          return `<span class="badge badge-priority-high"><span class="badge-dot"></span>높음</span>`;
+        case 'low':
+          return `<span class="badge badge-priority-low"><span class="badge-dot"></span>낮음</span>`;
+        case 'medium':
+        default:
+          return `<span class="badge badge-priority-medium"><span class="badge-dot"></span>보통</span>`;
+      }
+    }
+
+    /**
+     * Filter & Sort Tasks
+     */
+    function getFilteredAndSortedTasks() {
+      const todayStr = getLocalDateString();
+
+      // 1. Filtering
+      let result = tasks.filter(task => {
+        const isOverdue = !task.completed && task.dueDate && task.dueDate < todayStr;
+        const isToday = !task.completed && task.dueDate && task.dueDate === todayStr;
+
+        if (currentFilter === 'pending') {
+          return !task.completed;
+        } else if (currentFilter === 'completed') {
+          return task.completed;
+        } else if (currentFilter === 'today') {
+          return isToday;
+        } else if (currentFilter === 'overdue') {
+          return isOverdue;
+        }
+        return true; // 'all'
+      });
+
+      // 2. Sorting
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+
+      result.sort((a, b) => {
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+
+        if (currentSort === 'created-asc') {
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        } else if (currentSort === 'created-desc') {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        } else if (currentSort === 'due-asc') {
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return a.dueDate.localeCompare(b.dueDate);
+        } else if (currentSort === 'due-desc') {
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return b.dueDate.localeCompare(a.dueDate);
+        } else if (currentSort === 'priority-desc') {
+          const pA = priorityOrder[a.priority] || 2;
+          const pB = priorityOrder[b.priority] || 2;
+          return pB - pA;
+        }
+        return 0;
+      });
+
+      return result;
+    }
+
+    /**
+     * Update Dashboard Statistics
+     */
+    function updateStats() {
+      const todayStr = getLocalDateString();
+      const total = tasks.length;
+      const pending = tasks.filter(t => !t.completed).length;
+      const todayCount = tasks.filter(t => !t.completed && t.dueDate && t.dueDate === todayStr).length;
+      const overdueCount = tasks.filter(t => !t.completed && t.dueDate && t.dueDate < todayStr).length;
+
+      statAll.textContent = total;
+      statPending.textContent = pending;
+      statToday.textContent = todayCount;
+      statOverdue.textContent = overdueCount;
+    }
+
+    /**
+     * Main Render Function
+     */
+    function render() {
+      updateStats();
+
+      const filteredTasks = getFilteredAndSortedTasks();
+      taskList.innerHTML = '';
+
+      if (filteredTasks.length === 0) {
+        taskList.style.display = 'none';
+        emptyState.style.display = 'flex';
+
+        if (tasks.length === 0) {
+          emptyTitle.textContent = '등록된 업무가 없습니다';
+          emptyDesc.textContent = '상단의 입력창에 업무명과 마감일을 입력하고 새 업무를 등록해 보세요.';
+        } else {
+          emptyTitle.textContent = '조건에 맞는 업무가 없습니다';
+          emptyDesc.textContent = '다른 필터를 선택하거나 필터를 해제하여 전체 업무를 확인해 보세요.';
+        }
+        return;
+      }
+
+      taskList.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      filteredTasks.forEach(task => {
+        const statusInfo = getTaskStatusInfo(task);
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        if (task.completed) li.classList.add('is-completed');
+        if (statusInfo.isOverdue) li.classList.add('is-overdue');
+        if (statusInfo.isToday) li.classList.add('is-today');
+
+        // Due date badge & status text
+        let dueDateBadgeHtml = '';
+        if (task.completed) {
+          dueDateBadgeHtml = `<span class="badge badge-completed">완료됨</span>`;
+          if (task.dueDate) {
+            dueDateBadgeHtml += `<span class="badge badge-normal-due">마감: ${formatDisplayDate(task.dueDate)}</span>`;
+          }
+        } else if (!task.dueDate) {
+          dueDateBadgeHtml = `<span class="badge badge-due-none">마감일 없음</span>`;
+        } else if (statusInfo.isOverdue) {
+          const dday = getDDayString(task.dueDate, false);
+          dueDateBadgeHtml = `
+            <span class="badge badge-overdue">기한 지남</span>
+            <span class="badge badge-overdue">${dday ? dday + ' · ' : ''}${formatDisplayDate(task.dueDate)}</span>
+          `;
+        } else if (statusInfo.isToday) {
+          dueDateBadgeHtml = `
+            <span class="badge badge-today">오늘 마감</span>
+            <span class="badge badge-today">${formatDisplayDate(task.dueDate)}</span>
+          `;
+        } else {
+          const dday = getDDayString(task.dueDate, false);
+          dueDateBadgeHtml = `
+            <span class="badge badge-normal-due">${dday ? dday + ' · ' : ''}${formatDisplayDate(task.dueDate)}</span>
+          `;
+        }
+
+        // Priority badge (Korean text + color)
+        const priorityBadgeHtml = getPriorityBadge(task.priority);
+
+        // Google Calendar Action Button Generation
+        let calendarActionHtml = '';
+        const escapedTitleForJs = task.title.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+        if (task.dueDate) {
+          const calendarUrl = buildGoogleCalendarUrl(task);
+          calendarActionHtml = `
+            <a 
+              href="${calendarUrl}" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="btn-action-calendar" 
+              onclick="handleCalendarLinkClick('${escapedTitleForJs}')"
+              title="Google 캘린더에 일정 추가 (새 탭으로 열림 · 제목/우선순위 전달)"
+              aria-label="${escapeHtml(task.title)} Google 캘린더에 일정 추가 (새 탭)"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+                <line x1="12" y1="14" x2="12" y2="18"></line>
+                <line x1="10" y1="16" x2="14" y2="16"></line>
+              </svg>
+              <span>Google 캘린더에 추가</span>
+            </a>
+          `;
+        } else {
+          calendarActionHtml = `
+            <button 
+              type="button" 
+              class="btn-action-calendar is-disabled" 
+              onclick="handleCalendarNoDueDate()"
+              title="마감일을 먼저 설정해 주세요"
+              aria-label="마감일을 먼저 설정해 주세요"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Google 캘린더에 추가</span>
+            </button>
+          `;
+        }
+
+        li.innerHTML = `
+          <div class="task-item-header-row">
+            <label class="checkbox-container" title="${task.completed ? '미완료로 변경' : '완료로 표시'}">
+              <input 
+                type="checkbox" 
+                class="checkbox-input" 
+                ${task.completed ? 'checked' : ''} 
+                onchange="toggleTaskStatus('${task.id}')"
+                aria-label="${escapeHtml(task.title)} 완료 여부"
+              />
+              <span class="custom-checkbox">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </span>
+            </label>
+
+            <div class="task-body">
+              <span class="task-title-text">${escapeHtml(task.title)}</span>
+              <div class="task-meta">
+                ${priorityBadgeHtml}
+                ${dueDateBadgeHtml}
+              </div>
+            </div>
+          </div>
+
+          <div class="task-actions">
+            <div class="task-action-btns">
+              ${calendarActionHtml}
+              <button 
+                type="button" 
+                class="btn-action-delete" 
+                onclick="openDeleteModal('${task.id}')"
+                title="이 업무 삭제"
+                aria-label="${escapeHtml(task.title)} 삭제"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span>삭제</span>
+              </button>
+            </div>
+            <div class="calendar-field-notice">
+              ${task.dueDate ? '※ 제목·우선순위가 Google로 전달됩니다' : '※ 마감일 지정 시 캘린더 추가 가능'}
+            </div>
+          </div>
+        `;
+
+        taskList.appendChild(li);
+      });
+    }
+
+    /**
+     * Escape special HTML characters to prevent XSS
+     */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Keyboard accessibility for modal (ESC to close)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && deleteModal.style.display === 'flex') {
+        closeDeleteModal();
+      }
+    });
+
+    // Initialize application on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTasksFromStorage();
+      render();
+    });
+  </script>
+</body>
+</html>
